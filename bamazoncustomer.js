@@ -2,6 +2,8 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 var cTable = require("console.table");
 var productsArray = [];
+var userProduct;
+var quantityDesired = 0;
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -54,12 +56,13 @@ function purchaseItem() {
       var userSelect = answer.id;
       for (var i = 0; i < productsArray.length; i++) {
         if (productsArray[i].ID == userSelect) {
-          console.log(productsArray[i]);
+          userProduct = productsArray[i];
           if (productsArray[i].stock_quantity < answer.quantity) {
             console.log("Insufficient quantity!");
             connection.end();
             return;
           } else {
+            quantityDesired = answer.quantity;
             fulfillOrder();
           }
         }
@@ -68,6 +71,26 @@ function purchaseItem() {
 }
 
 function fulfillOrder() {
-  console.log("Good job getting this far!");
+  var quantityLeft = userProduct.stock_quantity - quantityDesired;
+  var userTotal = userProduct.price * quantityDesired;
+  console.log(userTotal);
+  connection.query(
+    "UPDATE products SET ? WHERE ?",
+    [{ stock_quantity: quantityLeft }, { ID: userProduct.ID }],
+    function(err, results) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+    }
+  );
+  console.log(
+    "Thank you for your purchase of " +
+      userProduct.product_name +
+      ". \nYour total is " +
+      userTotal +
+      ". Bye."
+  );
+  connection.end();
+  //console.log("Good job getting this far! Quantity: " + quantityDesired);
 }
-connection.end();
