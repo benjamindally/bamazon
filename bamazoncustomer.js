@@ -31,7 +31,6 @@ function showItems() {
       return;
     }
     productsArray = results;
-    console.log(results);
     var table = results;
     console.log("");
     console.table(table);

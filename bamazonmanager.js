@@ -51,18 +51,133 @@ function managerFunction() {
 }
 
 function viewProducts() {
-  console.log("View yo shit");
+  connection.query("SELECT * FROM products", function(err, results) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    var table = results;
+    console.log("");
+    console.table(table);
+  });
   connection.end();
 }
 function lowInventory() {
-  console.log("View yo low shit");
+  connection.query("SELECT * FROM products WHERE stock_quantity<5", function(
+    err,
+    results
+  ) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    var table = results;
+    console.table(results);
+  });
   connection.end();
 }
 function addInventory() {
-  console.log("Add yo shit");
-  connection.end();
+  connection.query("SELECT * FROM products", function(err, results) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    var productsArray = [];
+    for (var i = 0; i < results.length; i++) {
+      productsArray.push(results[i].product_name);
+    }
+
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "inventory_update",
+          message: "Select a product to update.",
+          choices: productsArray,
+        },
+      ])
+      .then(function(answer) {
+        var whatUpdated = answer.inventory_update;
+        for (var i = 0; i < results.length; i++) {
+          if (whatUpdated === results[i].product_name) {
+            var currentInventory = results[i].stock_quantity;
+            var id = results[i].ID;
+          }
+        }
+        inquirer
+          .prompt([
+            {
+              name: "addInventory",
+              message:
+                "There are currently " +
+                currentInventory +
+                " " +
+                whatUpdated +
+                ". How many would you like to add?",
+            },
+          ])
+          .then(function(answer2) {
+            var addHowMuch =
+              parseInt(answer2.addInventory) + parseInt(currentInventory);
+            connection.query(
+              "UPDATE products SET ? WHERE ?",
+              [{ stock_quantity: addHowMuch }, { ID: id }],
+              function(err, results) {
+                if (err) {
+                  console.log(err);
+                  return;
+                }
+              }
+            );
+            console.log("Your inventory has been updated.");
+            connection.end();
+          });
+      });
+  });
 }
 function addNew() {
-  console.log("New shit");
-  connection.end();
+  inquirer
+    .prompt([
+      {
+        name: "new_item",
+        message: "What is the name of the product you would like to add?",
+      },
+      {
+        name: "new_item_department",
+        type: "list",
+        message: "What department will this product be in?",
+        choices: [
+          "Sports and Recreation",
+          "Food and Beverage",
+          "Movies",
+          "Health",
+          "Outdoors",
+          "Clothing",
+        ],
+      },
+      {
+        name: "new_item_price",
+        message: "What is the price of the new item?",
+      },
+      {
+        name: "new_item_quantity",
+        message: "What is the quantity of stock available?",
+      },
+    ])
+    .then(function(answer) {
+      connection.query(
+        "INSERT INTO products SET ?",
+        {
+          product_name: answer.new_item,
+          department_name: answer.new_item_department,
+          price: answer.new_item_price,
+          stock_quantity: answer.new_item_quantity,
+        },
+        function(err) {
+          if (err) throw err;
+          console.log("Your item was added.");
+        }
+      );
+      connection.end();
+    });
 }
