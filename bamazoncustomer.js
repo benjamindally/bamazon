@@ -57,7 +57,9 @@ function purchaseItem() {
         if (productsArray[i].ID == userSelect) {
           userProduct = productsArray[i];
           if (productsArray[i].stock_quantity < answer.quantity) {
-            console.log("Insufficient quantity!");
+            console.log(
+              "Insufficient quantity! Please contact customer service."
+            );
             connection.end();
             return;
           } else {
@@ -72,7 +74,6 @@ function purchaseItem() {
 function fulfillOrder() {
   var quantityLeft = userProduct.stock_quantity - quantityDesired;
   var userTotal = userProduct.price * quantityDesired;
-  console.log(userTotal);
   connection.query(
     "UPDATE products SET ? WHERE ?",
     [{ stock_quantity: quantityLeft }, { ID: userProduct.ID }],
@@ -86,9 +87,9 @@ function fulfillOrder() {
   console.log(
     "Thank you for your purchase of " +
       userProduct.product_name +
-      ". \nYour total is " +
+      ". \nYour total is $" +
       userTotal +
-      ". Bye."
+      ". https://paypal.com"
   );
   connection.end();
   //console.log("Good job getting this far! Quantity: " + quantityDesired);
