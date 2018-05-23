@@ -19,11 +19,12 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
   if (err) throw err;
-  //console.log("connected as id " + connection.threadId);
 });
 
+//this triggers the showItems functions
 showItems();
 
+//
 function showItems() {
   connection.query("SELECT * FROM products", function(err, results) {
     if (err) {

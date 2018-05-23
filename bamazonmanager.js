@@ -14,15 +14,17 @@ var connection = mysql.createConnection({
   database: "bamazonDB",
 });
 
+//connect to the database
 connection.connect(function(err) {
   if (err) throw err;
-  //console.log("connected as id " + connection.threadId);
 });
 
+//run the manager function
 managerFunction();
 
 function managerFunction() {
   console.log("");
+  //use inquirer to get info from the user
   inquirer
     .prompt([
       {
@@ -37,6 +39,7 @@ function managerFunction() {
         ],
       },
     ])
+    //depending on what is selected, trigger the appropriate function
     .then(function(answer) {
       if (answer.functions === "View Products for Sale") {
         viewProducts();
@@ -51,6 +54,7 @@ function managerFunction() {
 }
 
 function viewProducts() {
+  //show all the items in the database
   connection.query("SELECT * FROM products", function(err, results) {
     if (err) {
       console.log(err);
@@ -58,11 +62,13 @@ function viewProducts() {
     }
     var table = results;
     console.log("");
+    //use the cTable package to improve the diplay of the table
     console.table(table);
   });
   connection.end();
 }
 function lowInventory() {
+  //only show inventory that is lower than 5 items
   connection.query("SELECT * FROM products WHERE stock_quantity<5", function(
     err,
     results
@@ -72,21 +78,25 @@ function lowInventory() {
       return;
     }
     var table = results;
+    //use cTable
     console.table(results);
   });
   connection.end();
 }
 function addInventory() {
+  //show all the items in the database
   connection.query("SELECT * FROM products", function(err, results) {
     if (err) {
       console.log(err);
       return;
     }
+    //place the items in an array
     var productsArray = [];
     for (var i = 0; i < results.length; i++) {
       productsArray.push(results[i].product_name);
     }
 
+    //ask the user to select which product they wnat to update
     inquirer
       .prompt([
         {
@@ -97,16 +107,20 @@ function addInventory() {
         },
       ])
       .then(function(answer) {
+        //store the items that the user wants updated into a variable
         var whatUpdated = answer.inventory_update;
+        //find the item they want in the database
         for (var i = 0; i < results.length; i++) {
           if (whatUpdated === results[i].product_name) {
             var currentInventory = results[i].stock_quantity;
+            //set the item's id as a variable
             var id = results[i].ID;
           }
         }
         inquirer
           .prompt([
             {
+              //find out how many the user wants to add to the inventory
               name: "addInventory",
               message:
                 "There are currently " +
@@ -117,8 +131,10 @@ function addInventory() {
             },
           ])
           .then(function(answer2) {
+            //set the ammount they want added as a variable
             var addHowMuch =
               parseInt(answer2.addInventory) + parseInt(currentInventory);
+            //update the database where the id's match to reflect the new inventory amount
             connection.query(
               "UPDATE products SET ? WHERE ?",
               [{ stock_quantity: addHowMuch }, { ID: id }],
@@ -135,7 +151,10 @@ function addInventory() {
       });
   });
 }
+
+//this function will add a new item to the database
 function addNew() {
+  //this will get the name of the product they want to add
   inquirer
     .prompt([
       {
@@ -143,6 +162,7 @@ function addNew() {
         message: "What is the name of the product you would like to add?",
       },
       {
+        //this will find out what department they want the product to go into
         name: "new_item_department",
         type: "list",
         message: "What department will this product be in?",
@@ -156,15 +176,18 @@ function addNew() {
         ],
       },
       {
+        //this will find out how much the user wants to charge
         name: "new_item_price",
         message: "What is the price of the new item?",
       },
       {
+        //this will find out how many they want to add
         name: "new_item_quantity",
         message: "What is the quantity of stock available?",
       },
     ])
     .then(function(answer) {
+      //this will put the information from the user input into the database
       connection.query(
         "INSERT INTO products SET ?",
         {
